@@ -1,34 +1,13 @@
-#include <windows.h>
-
-#include <cstdio>
-#include <csignal>
-#include <functional>
-#include <atomic>
+#include "debugio_impl.h"
+#include <cstring>
 
 #pragma comment(lib, "Advapi32.lib")
 
-struct DBWinBuffer
+namespace debugio
 {
-    DWORD processID;
-    char  data[4096 - sizeof(DWORD)];
-};
-
-class DebugMonitor
-{
-private:
-    HANDLE hDBWinMutex;
-    HANDLE hDBWinBufferReady;
-    HANDLE hDBWinDataReady;
-    HANDLE hDBWinBuffer;
-    struct DBWinBuffer *pDBWinBuffer;
-    HANDLE hMonitorThread;
-
-    std::function<void(struct DBWinBuffer*)> _callback;
-    std::atomic<bool> wantThreadStop;
-
-    static DWORD thread_body(LPVOID param)
+    DWORD MonitorImpl::monitor_thread(LPVOID param)
     {
-        auto *self = reinterpret_cast<class DebugMonitor *>(param);
+        auto *self = reinterpret_cast<class MonitorImpl *>(param);
         SetEvent(self->hDBWinBufferReady);
 
         while (!self->wantThreadStop.load()) {
@@ -41,19 +20,7 @@ private:
         return 0;
     }
 
-public:
-    DebugMonitor() :
-        hDBWinMutex(nullptr),
-        hDBWinBufferReady(nullptr),
-        hDBWinDataReady(nullptr),
-        hDBWinBuffer(nullptr),
-        pDBWinBuffer(nullptr),
-        hMonitorThread(nullptr),
-        wantThreadStop(false)
-    {
-    }
-
-    DWORD open()
+    int MonitorImpl::open()
     {
         // security
         SECURITY_ATTRIBUTES sa;
@@ -72,17 +39,6 @@ public:
             return 1;
         }
         
-        // Mutex :: DBWinMutex
-//        hDBWinMutex = ::OpenMutexA(
-//            MUTEX_ALL_ACCESS,
-//            FALSE,
-//            "DBWinMutex"
-//        );
-//        if (hDBWinMutex == nullptr) {
-//            fprintf(stderr, "fail open DBWinMutex: errno=%d\n", ::GetLastError());
-//            return 1;
-//        }
-
         // Event :: DBWIN_BUFFER_READY
         hDBWinBufferReady = ::OpenEventA(
             EVENT_ALL_ACCESS,
@@ -133,7 +89,7 @@ public:
                 &sa,
                 PAGE_READWRITE,
                 0,
-                sizeof(struct DBWinBuffer),
+                4096, // sizeof(debugio::Buffer)
                 "DBWIN_BUFFER"
             );
             if (hDBWinBuffer == nullptr) {
@@ -142,7 +98,7 @@ public:
             }
         }
         
-        pDBWinBuffer = static_cast<struct DBWinBuffer*>(::MapViewOfFile(
+        pDBWinBuffer = static_cast<Buffer*>(::MapViewOfFile(
             hDBWinBuffer,
             FILE_MAP_READ,
             0,
@@ -157,7 +113,7 @@ public:
         return 0;
     }
 
-    DWORD start(std::function<void(struct DBWinBuffer*)> callback)
+    int MonitorImpl::start(std::function<int(Buffer*)> callback)
     {
         stop();
 
@@ -166,7 +122,7 @@ public:
         hMonitorThread = ::CreateThread(
             NULL,
             0,
-            DebugMonitor::thread_body,
+            MonitorImpl::monitor_thread,
             this,
             0,
             NULL
@@ -182,17 +138,20 @@ public:
         return 0;
     }
     
-    void stop()
+    int MonitorImpl::stop()
     {
         if (hMonitorThread != nullptr) {
             wantThreadStop.store(true);
             ::WaitForSingleObject(hMonitorThread, INFINITE);
+
             hMonitorThread = nullptr;
             wantThreadStop.store(false);
         }
+
+        return 0;
     }
 
-    void close()
+    int MonitorImpl::close()
     {
         stop();
 
@@ -208,41 +167,13 @@ public:
             CloseHandle(hDBWinBufferReady);
             hDBWinBufferReady = nullptr;
         }
-        if (hDBWinMutex != nullptr) {
-            CloseHandle(hDBWinMutex);
-            hDBWinMutex = nullptr;
-        }
+
+        return 0;
+    }
+
+    int write(const char *data)
+    {
+        OutputDebugStringA(data);
+        return strlen(data);
     }
 };
-
-DebugMonitor debug_monitor{};
-
-void signal_handler(int signum)
-{
-    debug_monitor.stop();
-    debug_monitor.close();
-}
-
-int main()
-{
-    if (std::signal(SIGINT, signal_handler) == SIG_ERR) {
-        fprintf(stderr, "fail regist signal handler\n");
-        return 1;
-    }
-
-    if (debug_monitor.open() != 0) {
-        debug_monitor.close();
-        return 1;
-    }
-
-    debug_monitor.start([](DBWinBuffer *buf){
-        fprintf(stderr, "[DEBUG] %d:%s\n", buf->processID, buf->data);
-    });
-    
-    Sleep(10 * 1000);
-
-    debug_monitor.stop();
-    debug_monitor.close();
-
-    return 0;
-}
