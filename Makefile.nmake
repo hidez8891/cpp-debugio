@@ -5,7 +5,7 @@ OBJS=$(SRCS:.cpp=.obj)
 all: $(OUTDIR)\example_reader.exe \
      $(OUTDIR)\example_writer.exe
 
-.PHONY: all
+.PHONY: clean
 clean:
 	del /Q $(OBJS)
 	del /Q $(OUTDIR)\*
