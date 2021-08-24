@@ -1,0 +1,30 @@
+OUTDIR := output
+SRCS   := linux/debugio_impl.cpp
+OBJS   := $(SRCS:.cpp=.o)
+
+LIBS = -pthread
+
+all: $(OUTDIR)/example_reader \
+     $(OUTDIR)/example_writer
+
+.PHONY: clean
+clean:
+	rm -rf $(OBJS)
+	rm -rf $(OUTDIR)
+
+.PHONY: test
+test:
+	$(OUTDIR)/example_reader | $(OUTDIR)/example_writer
+
+READER_SRCS := example/reader.cpp
+READER_OBJS := $(READER_SRCS:.cpp=.o) $(OBJS)
+$(OUTDIR)/example_reader: $(READER_OBJS)
+	$(CXX) $(LIBS) -o $@ $^
+
+WRITER_SRCS := example/writer.cpp
+WRITER_OBJS := $(WRITER_SRCS:.cpp=.o) $(OBJS)
+$(OUTDIR)/example_writer: $(WRITER_OBJS)
+	$(CXX) $(LIBS) -o $@ $^
+
+.cpp.obj:
+	$(CXX) -c $<
