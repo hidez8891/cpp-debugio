@@ -7,7 +7,7 @@ int main()
 {
     debugio::Monitor monitor;
 
-    int ret = monitor.start([](debugio::Buffer *buf) -> int {
+    int ret = monitor.start([](debugio::Buffer* buf) -> int {
         fprintf(stderr, "[READ] pid=%d msg=%s\n", buf->processID, buf->data);
         return 0;
     });

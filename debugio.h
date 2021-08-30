@@ -2,21 +2,18 @@
 #include <functional>
 
 #ifdef _MSC_VER
-# include "windows/debugio_impl.h"
+#include "windows/debugio_impl.h"
 #else
-# include "linux/debugio_impl.h"
+#include "linux/debugio_impl.h"
 #endif
 
-namespace debugio
-{
-    struct Buffer
-    {
+namespace debugio {
+    struct Buffer {
         int32_t processID;
         uint8_t data[4096 - sizeof(int32_t)];
     };
-    
-    class Monitor : public MonitorImpl
-    {
+
+    class Monitor : public MonitorImpl {
     public:
         Monitor()
         {
@@ -27,7 +24,7 @@ namespace debugio
             MonitorImpl::stop();
             MonitorImpl::close();
         }
-        
+
         int start(std::function<int(Buffer*)> callback)
         {
             int ret = MonitorImpl::open();
@@ -46,6 +43,6 @@ namespace debugio
             return MonitorImpl::close();
         }
     };
-    
-    int write(const char *data);
+
+    int write(const char* data);
 }

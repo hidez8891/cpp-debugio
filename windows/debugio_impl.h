@@ -1,18 +1,16 @@
-#include <windows.h>
-#include <functional>
 #include <atomic>
+#include <functional>
+#include <windows.h>
 
-namespace debugio
-{
+namespace debugio {
     struct Buffer;
-    
-    class MonitorImpl
-    {
+
+    class MonitorImpl {
     private:
         HANDLE hDBWinBufferReady;
         HANDLE hDBWinDataReady;
         HANDLE hDBWinBuffer;
-        Buffer *pDBWinBuffer;
+        Buffer* pDBWinBuffer;
 
         HANDLE hMonitorThread;
 
@@ -22,13 +20,13 @@ namespace debugio
         static DWORD monitor_thread(LPVOID param);
 
     public:
-        MonitorImpl() : 
-            hDBWinBufferReady(nullptr),
-            hDBWinDataReady(nullptr),
-            hDBWinBuffer(nullptr),
-            pDBWinBuffer(nullptr),
-            hMonitorThread(nullptr),
-            wantThreadStop(false)
+        MonitorImpl()
+            : hDBWinBufferReady(nullptr)
+            , hDBWinDataReady(nullptr)
+            , hDBWinBuffer(nullptr)
+            , pDBWinBuffer(nullptr)
+            , hMonitorThread(nullptr)
+            , wantThreadStop(false)
         {
         }
 
