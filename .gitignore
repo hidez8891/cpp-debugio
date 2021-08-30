@@ -1,4 +1,9 @@
 ### C++ ###
+# Extension-less files
+*
+!*/
+!*.*
+
 # Prerequisites
 *.d
 
