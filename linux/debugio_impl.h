@@ -1,16 +1,17 @@
-#include <pthread.h>
-
+#include "shared_condition.h"
+#include "shared_memory.h"
 #include <atomic>
 #include <functional>
+#include <pthread.h>
 
-namespace debugio
-{
+namespace debugio {
     struct Buffer;
 
-    class MonitorImpl
-    {
+    class MonitorImpl {
     private:
-        int pipe_fd;
+        shared_condition events_buffer_ready;
+        shared_condition events_data_ready;
+        shared_memory<Buffer> data_buffer;
 
         pthread_t thread;
 
@@ -20,18 +21,8 @@ namespace debugio
         static void* monitor_thread(void*);
 
     public:
-        MonitorImpl() :
-            pipe_fd(0),
-            thread(0),
-            wantThreadStop(false)
-        {
-        }
-
-        virtual ~MonitorImpl()
-        {
-            stop();
-            close();
-        }
+        MonitorImpl();
+        virtual ~MonitorImpl();
 
     protected:
         int open();
@@ -39,4 +30,6 @@ namespace debugio
         int start(std::function<int(Buffer*)> callback);
         int stop();
     };
+
+    int write(const char* data);
 }
