@@ -7,7 +7,7 @@ all: $(OUTDIR)\example_reader.exe \
 
 .PHONY: clean
 clean:
-	del /Q $(OBJS)
+	del /Q /S *.obj
 	del /Q $(OUTDIR)\*
 
 .PHONY: test
