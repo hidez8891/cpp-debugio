@@ -8,10 +8,7 @@
 #endif
 
 namespace debugio {
-    struct Buffer {
-        int32_t processID;
-        uint8_t data[4096 - sizeof(int32_t)];
-    };
+    struct Buffer;
 
     class Monitor : public MonitorImpl {
     public:

@@ -1,40 +1,34 @@
+#ifndef DEBUGIO_IMPL_H_
+#define DEBUGIO_IMPL_H_
+
+#include "shared_event.h"
+#include "shared_memory.h"
 #include <atomic>
 #include <functional>
 #include <windows.h>
 
 namespace debugio {
-    struct Buffer;
+    struct Buffer {
+        int32_t processID;
+        uint8_t data[4096 - sizeof(int32_t)];
+    };
 
     class MonitorImpl {
     private:
-        HANDLE hDBWinBufferReady;
-        HANDLE hDBWinDataReady;
-        HANDLE hDBWinBuffer;
-        Buffer* pDBWinBuffer;
+        shared_event eventBufferReady;
+        shared_event eventDataReady;
+        shared_memory<Buffer> shmBuffer;
 
         HANDLE hMonitorThread;
 
-        std::function<int(Buffer*)> _callback;
+        std::function<int(Buffer*)> callback;
         std::atomic<bool> wantThreadStop;
 
         static DWORD monitor_thread(LPVOID param);
 
     public:
-        MonitorImpl()
-            : hDBWinBufferReady(nullptr)
-            , hDBWinDataReady(nullptr)
-            , hDBWinBuffer(nullptr)
-            , pDBWinBuffer(nullptr)
-            , hMonitorThread(nullptr)
-            , wantThreadStop(false)
-        {
-        }
-
-        virtual ~MonitorImpl()
-        {
-            stop();
-            close();
-        }
+        MonitorImpl();
+        ~MonitorImpl();
 
     protected:
         int open();
@@ -43,3 +37,5 @@ namespace debugio {
         int stop();
     };
 }
+
+#endif
