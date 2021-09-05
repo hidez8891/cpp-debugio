@@ -4,8 +4,8 @@ OBJS   := $(SRCS:.cpp=.o)
 
 LIBS = -lpthread -lrt
 
-all: $(OUTDIR)/example_reader \
-     $(OUTDIR)/example_writer
+build: $(OUTDIR)/example_reader \
+       $(OUTDIR)/example_writer
 
 .PHONY: clean
 clean:

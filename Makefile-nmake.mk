@@ -2,8 +2,8 @@ OUTDIR=output
 SRCS=windows\debugio_impl.cpp
 OBJS=$(SRCS:.cpp=.obj)
 
-all: $(OUTDIR)\example_reader.exe \
-     $(OUTDIR)\example_writer.exe
+build: $(OUTDIR)\example_reader.exe \
+       $(OUTDIR)\example_writer.exe
 
 .PHONY: clean
 clean:
