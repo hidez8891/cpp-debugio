@@ -38,5 +38,8 @@
 *.app
 output/
 
+# Temporary directory
+_*/
+
 # IDE / Editor
 .vscode/
