@@ -1,3 +1,6 @@
+#pragma warning(disable : 4267)
+#pragma warning(disable : 4996)
+
 #include "../include/debugio.h"
 
 #ifdef _MSC_VER
@@ -28,8 +31,11 @@ int main()
         debugio::write_string(msg.c_str());
         fprintf(stderr, "[WRITE] %s\n", msg.c_str());
 
-        sleep_for(500ms);
+        sleep_for(100ms);
     }
 
+    sleep_for(100ms);
+
+    fprintf(stderr, "Writer process Finished\n");
     return 0;
 }
