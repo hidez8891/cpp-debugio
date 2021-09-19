@@ -33,7 +33,7 @@ namespace debugio {
 
     struct Buffer {
         pid_t processID;
-        char* data[4096 - sizeof(pid_t)];
+        char data[4096 - sizeof(pid_t)];
     };
 
     /***************************************************************************
@@ -210,6 +210,7 @@ namespace debugio {
         static Writer writer;
         writer.write(str);
 #endif
+        return strlen(str);
     }
 }
 
