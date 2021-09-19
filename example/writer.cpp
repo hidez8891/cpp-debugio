@@ -1,18 +1,35 @@
-#include "../debugio.h"
-#include "helper.h"
+#include "../include/debugio.h"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
+#include <chrono>
 #include <cstdio>
+#include <thread>
 
 int main()
 {
-    fprintf(stderr, "pid = %d\n", helper::getpid());
+    using std::this_thread::sleep_for;
+    using namespace std::literals::chrono_literals;
+
+#ifdef _MSC_VER
+    fprintf(stderr, "writer pid = %d\n", GetCurrentProcessId());
+#else
+    fprintf(stderr, "writer pid = %d\n", getpid());
+#endif
 
     for (int i = 0; i < 10; ++i) {
         std::string msg = "Hello! " + std::to_string(i);
 
-        debugio::write(msg.c_str());
+        debugio::write_string(msg.c_str());
         fprintf(stderr, "[WRITE] %s\n", msg.c_str());
 
-        helper::sleep(500);
+        sleep_for(500ms);
     }
+
+    return 0;
 }

@@ -1,24 +1,23 @@
-#include "../debugio.h"
-#include "helper.h"
+#include "../include/debugio.h"
 
+#include <chrono>
 #include <cstdio>
+#include <thread>
 
 int main()
 {
+    using std::this_thread::sleep_for;
+    using namespace std::literals::chrono_literals;
+
     debugio::Monitor monitor;
 
-    int ret = monitor.start([](debugio::Buffer* buf) -> int {
+    monitor.start([](debugio::Buffer* buf) -> int {
         fprintf(stderr, "[READ] pid=%d msg=%s\n", buf->processID, buf->data);
         return 0;
     });
-    if (ret != 0) {
-        fprintf(stderr, "fail start debugio::Monitor\n");
-        return 1;
-    }
 
-    helper::sleep(10 * 1000);
+    sleep_for(500ms);
 
     monitor.stop();
-
     return 0;
 }
