@@ -31,7 +31,7 @@ int main()
         debugio::write_string(msg.c_str());
         fprintf(stderr, "[WRITE] %s\n", msg.c_str());
 
-        sleep_for(100ms);
+        sleep_for(50ms);
     }
 
     sleep_for(100ms);

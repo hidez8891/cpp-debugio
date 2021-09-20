@@ -1,6 +1,7 @@
 #ifndef DEBUGIO_H_
 #define DEBUGIO_H_
 
+#include <atomic>
 #include <functional>
 #include <thread>
 
@@ -44,6 +45,7 @@ namespace debugio {
         shared_memory<Buffer> buffer;
         event buffer_ready;
         event data_ready;
+        std::atomic<bool> stop_required;
 
         int open();
         int close();
@@ -57,6 +59,7 @@ namespace debugio {
         : buffer(DATA_BUFFER_ID)
         , buffer_ready(EVENTS_BUFFER_READY_ID)
         , data_ready(EVENTS_DATA_READY_ID)
+        , stop_required(false)
     {
     }
 
@@ -103,7 +106,7 @@ namespace debugio {
     */
     class Monitor : DebugIoBase {
     private:
-        std::jthread monitor;
+        std::thread monitor;
 
     public:
         Monitor();
@@ -111,6 +114,8 @@ namespace debugio {
 
         int start(std::function<int(Buffer*)> callback);
         int stop();
+
+        std::thread::native_handle_type native_handle();
     };
 
     inline Monitor::Monitor()
@@ -134,9 +139,10 @@ namespace debugio {
             return -1;
         }
 
-        monitor = std::jthread([this, callback](std::stop_token st) mutable {
+        stop_required.store(false);
+        monitor = std::thread([this, callback]() mutable {
             this->buffer_ready.notify();
-            while (!st.stop_requested()) {
+            while (!this->stop_required.load()) {
                 if (this->data_ready.wait(100) == 0) {
                     callback(&buffer);
                     this->buffer_ready.notify();
@@ -152,10 +158,15 @@ namespace debugio {
             return 0;
         }
 
-        monitor.request_stop();
+        stop_required.store(true);
         monitor.join();
 
         return close();
+    }
+
+    inline std::thread::native_handle_type Monitor::native_handle()
+    {
+        return monitor.native_handle();
     }
 
     /***************************************************************************
