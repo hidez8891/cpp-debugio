@@ -33,7 +33,7 @@ namespace ipc::posix {
         bool is_opened() const;
 
         int open(int value = 1);
-        int close();
+        int close(bool destroy = true);
 
         int lock(int wait_ms = -1);
         int trylock();
@@ -91,16 +91,19 @@ namespace ipc::posix {
         return 0;
     }
 
-    inline int semaphore::close()
+    inline int semaphore::close(bool destroy)
     {
         if (sem != SEM_FAILED) {
             if (sem_close(sem) != 0) {
                 return errno;
             }
             sem = SEM_FAILED;
-        }
-        if (sem_unlink(name) != 0) {
-            return errno;
+
+            if (destroy) {
+                if (sem_unlink(name) != 0) {
+                    return errno;
+                }
+            }
         }
         return 0;
     }

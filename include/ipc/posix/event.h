@@ -27,7 +27,7 @@ namespace ipc::posix {
         bool is_opened() const;
 
         int open();
-        int close();
+        int close(bool destroy = true);
 
         int wait(int wait_ms = -1);
         int notify();
@@ -100,16 +100,16 @@ namespace ipc::posix {
         return 0;
     }
 
-    inline int event::close()
+    inline int event::close(bool destroy)
     {
         int err;
-        if ((err = guard.close()) != 0) {
+        if ((err = guard.close(destroy)) != 0) {
             return err;
         }
-        if ((err = sync.close()) != 0) {
+        if ((err = sync.close(destroy)) != 0) {
             return err;
         }
-        if ((err = signal.close()) != 0) {
+        if ((err = signal.close(destroy)) != 0) {
             return err;
         }
         return 0;

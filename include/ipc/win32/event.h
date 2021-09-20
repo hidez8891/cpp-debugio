@@ -28,7 +28,7 @@ namespace ipc::win32 {
         bool is_opened() const;
 
         int open();
-        int close();
+        int close(bool destroy = true);
 
         int wait(int wait_ms = -1);
         int notify();
@@ -101,7 +101,7 @@ namespace ipc::win32 {
         return 0;
     }
 
-    inline int event::close()
+    inline int event::close(bool destroy /* unused */)
     {
         if (hEvent != nullptr) {
             CloseHandle(hEvent);

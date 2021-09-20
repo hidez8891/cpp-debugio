@@ -36,7 +36,7 @@ namespace ipc::win32 {
         bool is_created() const;
 
         int open();
-        int close();
+        int close(bool destroy = true);
     };
 
     template <typename T>
@@ -163,7 +163,7 @@ namespace ipc::win32 {
     }
 
     template <typename T>
-    int shared_memory<T>::close()
+    int shared_memory<T>::close(bool destroy /* unused */)
     {
         if (pBuffer != nullptr) {
             UnmapViewOfFile(pBuffer);

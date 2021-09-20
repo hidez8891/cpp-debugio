@@ -40,7 +40,7 @@ namespace ipc::posix {
         bool is_created() const;
 
         int open();
-        int close();
+        int close(bool destroy = true);
     };
 
     template <typename T>
@@ -82,6 +82,7 @@ namespace ipc::posix {
         std::swap(fd, other.fd);
         std::swap(name, other.name);
         std::swap(data, other.data);
+        std::swap(created, other.created);
         return *this;
     }
 
@@ -150,7 +151,7 @@ namespace ipc::posix {
     }
 
     template <typename T>
-    int shared_memory<T>::close()
+    int shared_memory<T>::close(bool destroy)
     {
         if (data != nullptr) {
             if (munmap(data, sizeof(T)) != 0) {
@@ -163,9 +164,12 @@ namespace ipc::posix {
                 return errno;
             }
             fd = -1;
-        }
-        if (shm_unlink(name) != 0) {
-            return errno;
+
+            if (destroy) {
+                if (shm_unlink(name) != 0) {
+                    return errno;
+                }
+            }
         }
 
         return 0;

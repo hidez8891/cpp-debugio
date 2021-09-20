@@ -48,7 +48,7 @@ namespace debugio {
         std::atomic<bool> stop_required;
 
         int open();
-        int close();
+        int close(bool destroy = false);
 
     public:
         DebugIoBase();
@@ -86,16 +86,16 @@ namespace debugio {
         return 0;
     }
 
-    inline int DebugIoBase::close()
+    inline int DebugIoBase::close(bool destroy)
     {
         int err;
-        if ((err = buffer.close()) != 0) {
+        if ((err = buffer.close(destroy)) != 0) {
             return err;
         }
-        if ((err = buffer_ready.close()) != 0) {
+        if ((err = buffer_ready.close(destroy)) != 0) {
             return err;
         }
-        if ((err = data_ready.close()) != 0) {
+        if ((err = data_ready.close(destroy)) != 0) {
             return err;
         }
         return 0;
@@ -113,7 +113,7 @@ namespace debugio {
         virtual ~Monitor();
 
         int start(std::function<int(Buffer*)> callback);
-        int stop();
+        int stop(bool destroy = false);
 
         std::thread::native_handle_type native_handle();
     };
@@ -152,7 +152,7 @@ namespace debugio {
         return 0;
     }
 
-    inline int Monitor::stop()
+    inline int Monitor::stop(bool destroy)
     {
         if (!monitor.joinable()) {
             return 0;
@@ -161,7 +161,7 @@ namespace debugio {
         stop_required.store(true);
         monitor.join();
 
-        return close();
+        return close(destroy);
     }
 
     inline std::thread::native_handle_type Monitor::native_handle()
